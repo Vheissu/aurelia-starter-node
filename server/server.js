@@ -37,10 +37,10 @@ app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
 
 io.on('connection', function(socket) {
-    socketCount++;
+    ++socketCount;
     console.log('A user connected.');
 
     socket.on('disconnect', function() {
-        socketCount--;
+        --socketCount;
     });
 });
