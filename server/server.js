@@ -1,10 +1,18 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
-import path from 'path';
-import requireDir  from 'require-dir';
-import swig from 'swig';
-import mongoose from 'mongoose';
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var path = require('path');
+var requireDir = require('require-dir');
+var swig = require('swig');
+var mongoose = require('mongoose');
+
+var socketCount = 0;
+
+var config = require('./config.js');
+
+server.listen(process.env.PORT || config.port || 3000);
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -14,32 +22,25 @@ var allowCrossDomain = function(req, res, next) {
     next();
 };
 
-global.app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(allowCrossDomain);
+app.use(cookieParser());
+app.use(app.router);
 
-global.app.use(bodyParser.json());
-global.app.use(bodyParser.urlencoded({ extended: false }));
-global.app.use(allowCrossDomain);
-global.app.use(cookieParser());
+app.use('/jspm_packages', express.static(__dirname + '/../jspm_packages'));
+app.use('/client', express.static(__dirname + '/../client'));
+app.use('/assets', express.static(__dirname + '/../assets'));
 
-global.app.use('/jspm_packages', express.static(`${__dirname}/../jspm_packages`));
-global.app.use('/client', express.static(`${__dirname}/../client`));
-global.app.use('/assets', express.static(`${__dirname}/../assets`));
+app.engine('html', swig.renderFile);
+app.set('view engine', 'html');
+app.set('views', path.join(__dirname, 'views'));
 
-global.app.engine('html', swig.renderFile);
-global.app.set('view engine', 'html');
-global.app.set('views', path.join(__dirname, 'views'));
+io.on('connection', function(socket) {
+    socketCount++;
+    console.log('A user connected.');
 
-global.app.get('/', (req, res) => {
-    res.sendFile(path.resolve(`${__dirname}/../index.html`));
-});
-
-global.app.get('/config.js', (req, res) => {
-    res.sendFile(path.resolve(`${__dirname}/../config.js`));
-});
-
-const SERVER = global.app.listen(3000, () => {
-    const HOST = SERVER.address().address;
-    const PORT = SERVER.address().port;
-
-    console.log(`Server listening at http://${HOST}:${PORT}`);
+    socket.on('disconnect', function() {
+        socketCount--;
+    });
 });
