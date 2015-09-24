@@ -1,10 +1,10 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var swig = require('swig');
-
-var app = express();
+import express from 'express';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import path from 'path';
+import requireDir  from 'require-dir';
+import swig from 'swig';
+import mongoose from 'mongoose';
 
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
@@ -14,26 +14,32 @@ var allowCrossDomain = function(req, res, next) {
     next();
 };
 
-// view engine setup
-app.engine('html', swig.renderFile);
-app.set('view engine', 'html');
-app.set('views', path.join(__dirname, 'views'));
+global.app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(allowCrossDomain);
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+global.app.use(bodyParser.json());
+global.app.use(bodyParser.urlencoded({ extended: false }));
+global.app.use(allowCrossDomain);
+global.app.use(cookieParser());
 
-var api = require('./routes/api');
-app.use('/', api);
+global.app.use('/jspm_packages', express.static(`${__dirname}/../jspm_packages`));
+global.app.use('/client', express.static(`${__dirname}/../client`));
+global.app.use('/assets', express.static(`${__dirname}/../assets`));
 
-var debug = require('debug')('aurelia-node');
+global.app.engine('html', swig.renderFile);
+global.app.set('view engine', 'html');
+global.app.set('views', path.join(__dirname, 'views'));
 
-app.set('port', process.env.PORT || 9000);
-
-var server = app.listen(app.get('port'), function() {
-  debug('Express server listening on port ' + server.address().port);
+global.app.get('/', (req, res) => {
+    res.sendFile(path.resolve(`${__dirname}/../index.html`));
 });
 
-module.exports = app;
+global.app.get('/config.js', (req, res) => {
+    res.sendFile(path.resolve(`${__dirname}/../config.js`));
+});
+
+const SERVER = global.app.listen(3000, () => {
+    const HOST = SERVER.address().address;
+    const PORT = SERVER.address().port;
+
+    console.log(`Server listening at http://${HOST}:${PORT}`);
+});
