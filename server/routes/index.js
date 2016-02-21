@@ -1,12 +1,4 @@
-var express = require('express');
-var router = express.Router();
-
-router.get('/', function(req, res) {
-  res.redirect('/app/');
-});
-
-router.get('/views/welcome', function(req, res) {
-  res.render('welcome', {nodePort: require('../client/server').get('port')});
-});
-
-module.exports = router;
+module.exports = function (app) {
+    app.use('/', require('./routes/index'));
+    app.use('/api', require('./routes/api'));
+};
