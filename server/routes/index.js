@@ -6,7 +6,7 @@ router.get('/', function(req, res) {
 });
 
 router.get('/views/welcome', function(req, res) {
-  res.render('welcome', {nodePort: require('../server').get('port')});
+  res.render('welcome', {nodePort: require('../client/server').get('port')});
 });
 
 module.exports = router;
